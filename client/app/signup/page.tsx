@@ -23,7 +23,7 @@ const SignUpIllustration: React.FC = () => {
   return (
     <img
       loading="lazy"
-      src="/Sign in:up Graphic.svg"
+      src="/Sign in and sign up Graphic.svg"
       className="object-contain w-48 mb-6"
       alt="Sign Up illustration"
     />

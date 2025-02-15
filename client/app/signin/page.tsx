@@ -23,7 +23,7 @@ const SignInIllustration: React.FC = () => {
   return (
     <img
       loading="lazy"
-      src="/Sign in:up Graphic.svg"
+      src="/Sign in and sign up Graphic.svg"
       className="object-contain w-48 mb-6"
       alt="Sign In illustration"
     />
@@ -70,7 +70,7 @@ const SignInForm: React.FC = () => {
         </button>
       </form>
       <div className="mt-4 text-gray-700 text-sm">
-        Don't have an account?{" "}
+        Don&apos;t have an account?{" "}
         <a
           href="/signup"
           className="text-pink-500 font-semibold hover:underline"
