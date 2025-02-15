@@ -189,7 +189,7 @@ const EditProfilePage = () => {
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold text-gray-800">Edit Profile</h1>
           <Link
-            href="/dashboard"
+            href="/user"
             className="p-2 rounded-full hover:bg-gray-100 transition-colors"
           >
             <Home className="w-6 h-6 text-gray-600" />
