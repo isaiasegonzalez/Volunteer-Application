@@ -39,9 +39,12 @@ const LandingPage = () => {
             Vola connects you with volunteer opportunities that match your skills, 
             location, and availability—so you can focus on what truly matters: giving back.
           </p>
-          <button className="bg-[#FFC6C7] hover:bg-[#FF8BA7] text-white px-8 py-3 rounded-lg text-lg transition-colors">
+          <Link 
+            href="/signup" 
+            className="inline-block bg-[#FFC6C7] hover:bg-[#FF8BA7] text-white px-8 py-3 rounded-lg text-lg transition-colors"
+          >
             Get Started with Vola
-          </button>
+          </Link>
         </div>
 
         <div className="w-1/2 relative">
