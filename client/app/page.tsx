@@ -1,5 +1,4 @@
 "use client";
-
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -23,7 +22,7 @@ const LandingPage = () => {
       <nav className="flex items-center justify-between px-8 py-4">
         <div className={`text-2xl ${modak.className} text-[#FF8BA7]`}>Vola!</div>
         <div className="flex items-center space-x-8">
-          <Link href="/login" className="text-[#FF8BA7] hover:text-[#FF8BA7]/90 flex items-center">
+          <Link href="/signin" className="text-[#FF8BA7] hover:text-[#FF8BA7]/90 flex items-center">
             👤 <span className="ml-1">Login</span>
           </Link>
         </div>
@@ -69,7 +68,7 @@ const LandingPage = () => {
             {/* Single illustration */}
             <div className="absolute inset-0 flex items-center justify-center">
               <Image
-                src= "/imgs/undraw_collaborators_rgw4 1.png" // Update with your actual image path
+                src="/imgs/undraw_collaborators_rgw4 1.png"
                 alt="Volunteer illustration"
                 width={400}
                 height={400}
