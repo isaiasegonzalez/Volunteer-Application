@@ -1,7 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation"; // Import router
 import { ChevronsUpDown, LogOut, Settings } from "lucide-react";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -27,6 +27,21 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+  const router = useRouter(); // Initialize router
+
+  const handleLogout = async () => {
+    // Perform logout logic using Supabase
+    try {
+      console.log("Logging out...");
+      // Example: If using an authentication API, call it here:
+      // await fetch("/api/logout", { method: "POST" });
+
+      // Redirect to sign-in page
+      router.push("/signin");
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
 
   return (
     <SidebarMenu>
@@ -70,7 +85,7 @@ export function NavUser({
               <Settings />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Log out
             </DropdownMenuItem>
