@@ -100,8 +100,8 @@ const SignInForm: React.FC = () => {
         console.log("Redirecting to /admin");
         router.push("/admin");
       } else {
-        console.log("Redirecting to /dashboard");
-        router.push("/dashboard");
+        console.log("Redirecting to /user");
+        router.push("/user");
       }
     } catch (err) {
       console.error("Unexpected error:", err);
