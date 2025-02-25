@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { format } from "date-fns";
@@ -11,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -26,13 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
@@ -67,7 +60,7 @@ const skillsList = [
   { label: "Counseling", value: "counseling" },
   { label: "Event Planning", value: "event-planning" },
   { label: "Photography", value: "photography" },
-] as const;
+];
 
 // Urgency levels
 const urgencyLevels = [
@@ -75,189 +68,189 @@ const urgencyLevels = [
   { label: "Medium", value: "medium" },
   { label: "High", value: "high" },
   { label: "Critical", value: "critical" },
-] as const;
-
-const recentEvents = [
-  {
-    name: "Community Cleanup Drive",
-    date: "2024-02-14",
-    status: "Active",
-    volunteers: 24,
-    location: "Central Park",
-  },
-  {
-    name: "Food Bank Distribution",
-    date: "2024-02-13",
-    status: "Completed",
-    volunteers: 15,
-    location: "Downtown Center",
-  },
-  {
-    name: "Senior Care Visit",
-    date: "2024-02-12",
-    status: "Completed",
-    volunteers: 8,
-    location: "Sunrise Home",
-  },
-  {
-    name: "Youth Mentorship Program",
-    date: "2024-02-15",
-    status: "Upcoming",
-    volunteers: 12,
-    location: "Community Center",
-  },
 ];
 
-// Form schema
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Event name is required")
-    .max(100, "Event name must be less than 100 characters"),
-  description: z.string().min(1, "Description is required"),
-  location: z.string().min(1, "Location is required"),
-  skills: z.array(z.string()).min(1, "At least one skill is required"),
-  urgency: z.string().min(1, "Urgency level is required"),
-  date: z.date({
-    required_error: "Event date is required",
-  }),
-});
+// **💡 FETCH EVENTS FROM SUPABASE**
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  urgency: string;
+  date: string;
+  volunteers: number;
+  status: string;
+}
 
 export default function EventManagementPage() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+
+  useEffect(() => {
+    async function fetchEvents() {
+      try {
+        const response = await fetch("/api/events");
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error("Error fetching events:", data.error);
+          return;
+        }
+
+        setEvents(data.events || []);
+      } catch (error) {
+        console.error("Network error:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchEvents();
+  }, []);
+
+  async function deleteEvent(id: string) {
+    const response = await fetch(`/api/events/${id}`, { method: "DELETE" });
+
+    if (response.ok) {
+      alert("Event deleted successfully!");
+      setEvents(events.filter(event => event.id !== id));
+    } else {
+      alert("Error deleting event.");
+    }
+  }
+
+  async function editEvent(event: Event) {
+    setEditingEvent(event);
+  }
+
+  // **💡 FORM HANDLING FOR CREATING/UPDATING EVENTS**
+  const formSchema = z.object({
+    name: z.string().min(1, "Event name is required").max(100),
+    description: z.string().min(1, "Description is required"),
+    location: z.string().min(1, "Location is required"),
+    skills: z.array(z.string()).min(1, "At least one skill is required"),
+    urgency: z.string().min(1, "Urgency level is required"),
+    date: z.date({ required_error: "Event date is required" }),
+  });
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: "",
+      description: "",
+      location: "",
       skills: [],
+      urgency: "",
+      date: new Date(),
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    // Handle form submission here
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const url = editingEvent ? `/api/events/${editingEvent.id}` : "/api/events";
+    const method = editingEvent ? "PUT" : "POST";
+
+    const response = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: values.name,
+        description: values.description,
+        location: values.location,
+        requiredSkills: values.skills,
+        urgency: values.urgency,
+        date: values.date,
+      }),
+    });
+
+    if (response.ok) {
+      alert(editingEvent ? "Event updated successfully!" : "Event created successfully!");
+      window.location.reload();
+    } else {
+      alert("Error saving event.");
+    }
   }
 
   return (
     <div className="flex-1 space-y-6 p-8 pt-6 content-center">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Events</h2>
-      </div>
+      <h2 className="text-3xl font-bold tracking-tight">Events</h2>
+
       <div className="flex space-x-6">
-        <Card>
+        {/* RECENT EVENTS TABLE */}
+        <Card className="w-2/3">
           <CardHeader>
             <CardTitle>Recent Events</CardTitle>
-            <CardDescription>
-              Overview of the latest volunteer events
-            </CardDescription>
+            <CardDescription>Overview of the latest volunteer events</CardDescription>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[400px]">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Volunteers</TableHead>
-                    <TableHead>Location</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentEvents.map((event) => (
-                    <TableRow key={event.name}>
-                      <TableCell className="font-medium">
-                        {event.name}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(event.date).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            event.status === "Active"
-                              ? "default"
-                              : event.status === "Completed"
-                              ? "secondary"
-                              : "outline"
-                          }
-                        >
-                          {event.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{event.volunteers}</TableCell>
-                      <TableCell>{event.location}</TableCell>
+              {loading ? (
+                <p>Loading events...</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Volunteers</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {events.map((event) => (
+                      <TableRow key={event.id}>
+                        <TableCell className="font-medium">{event.title}</TableCell>
+                        <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <Badge variant="default">{event.status}</Badge>
+                        </TableCell>
+                        <TableCell>{event.volunteers ?? 0}</TableCell>
+                        <TableCell>{event.location}</TableCell>
+                        <TableCell>
+                          <Button size="sm" variant="outline" onClick={() => editEvent(event)}>Edit</Button>
+                          <Button size="sm" variant="destructive" onClick={() => deleteEvent(event.id)}>Delete</Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </ScrollArea>
           </CardContent>
         </Card>
+
+        {/* CREATE/EDIT EVENT FORM */}
         <Card>
           <CardHeader>
-            <CardTitle>Create Event</CardTitle>
+            <CardTitle>{editingEvent ? "Edit Event" : "Create Event"}</CardTitle>
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-8"
-              >
-                {/* Event Name */}
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Event Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter event name"
-                          {...field}
-                          maxLength={100}
-                        />
-                      </FormControl>
-                      <FormDescription>Maximum 100 characters</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <FormField control={form.control} name="name" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Event Name</FormLabel>
+                    <FormControl><Input placeholder="Enter event name" {...field} maxLength={100} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="description" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl><Textarea placeholder="Enter event description" className="min-h-[100px]" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
 
-                {/* Description */}
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Enter event description"
-                          className="min-h-[100px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Location */}
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Location</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Enter event location"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <FormField control={form.control} name="location" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location</FormLabel>
+                    <FormControl><Textarea placeholder="Enter event location" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
 
                 {/* Required Skills */}
                 <FormField
@@ -274,54 +267,45 @@ export default function EventManagementPage() {
                               role="combobox"
                               className={cn(
                                 "w-full justify-between",
-                                !field.value && "text-muted-foreground"
+                                field.value.length === 0 && "text-muted-foreground"
                               )}
                             >
-                              {field.value?.length
-                                ? `${field.value.length} skills selected`
+                              {field.value.length > 0
+                                ? field.value.map((skill) => skillsList.find((s) => s.value === skill)?.label).join(", ")
                                 : "Select skills"}
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-[200px] p-0">
-                          <Command>
-                            <CommandInput placeholder="Search skills..." />
-                            <CommandEmpty>No skill found.</CommandEmpty>
-                            <CommandGroup>
-                              {skillsList.map((skill) => (
-                                <CommandItem
-                                  value={skill.label}
-                                  key={skill.value}
-                                  onSelect={() => {
-                                    const newValue = field.value.includes(
-                                      skill.value
-                                    )
-                                      ? field.value.filter(
-                                          (value) => value !== skill.value
-                                        )
-                                      : [...field.value, skill.value];
-                                    form.setValue("skills", newValue);
-                                  }}
-                                >
-                                  <div
-                                    className={cn(
-                                      "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                                      field.value?.includes(skill.value)
-                                        ? "bg-primary text-primary-foreground"
-                                        : "opacity-50 [&_svg]:invisible"
-                                    )}
-                                  ></div>
-                                  {skill.label}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </Command>
+                          <ScrollArea className="h-40">
+                            {skillsList.map((skill) => (
+                              <div
+                                key={skill.value}
+                                className="flex items-center p-2 hover:bg-gray-100 cursor-pointer"
+                                onClick={() => {
+                                  const newValue = field.value.includes(skill.value)
+                                    ? field.value.filter((value) => value !== skill.value) // Remove skill if already selected
+                                    : [...field.value, skill.value]; // Add skill if not selected
+                                  form.setValue("skills", newValue);
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={field.value.includes(skill.value)}
+                                  className="mr-2"
+                                  readOnly
+                                />
+                                {skill.label}
+                              </div>
+                            ))}
+                          </ScrollArea>
                         </PopoverContent>
                       </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
 
                 {/* Urgency */}
                 <FormField
@@ -392,8 +376,7 @@ export default function EventManagementPage() {
                     </FormItem>
                   )}
                 />
-
-                <Button type="submit">Create Event</Button>
+                <Button type="submit">{editingEvent ? "Update Event" : "Create Event"}</Button>
               </form>
             </Form>
           </CardContent>
