@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/supabaseClient';
 
-// Correctly export the POST method
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
@@ -15,6 +14,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ message: 'User created successfully!', data }, { status: 200 });
   } catch (err) {
+    console.error(err); // Log the error for debugging
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
