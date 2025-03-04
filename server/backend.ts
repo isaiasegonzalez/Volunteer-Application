@@ -20,7 +20,7 @@ if (!supabaseUrl || !supabaseKey) {
     process.exit(1);
 }
 
-// ✅ FIX: Only insert `status` if provided (Let Supabase default work)
+// ✅ Send Notification & Return Updated Notifications
 app.post("/send-notification", async (req: express.Request, res: express.Response) => {
     try {
         const { type, event, message, status } = req.body;
@@ -30,9 +30,9 @@ app.post("/send-notification", async (req: express.Request, res: express.Respons
             return;
         }
 
-        // ✅ Create object dynamically (avoiding overriding Supabase default)
+        // ✅ Use Supabase default status unless provided
         const newNotification: any = { type, event, message };
-        if (status) newNotification.status = status; // Only add `status` if it exists
+        if (status) newNotification.status = status;
 
         // Store the notification in Supabase
         const { error } = await supabase.from("notifications").insert([newNotification]);
@@ -42,9 +42,34 @@ app.post("/send-notification", async (req: express.Request, res: express.Respons
             return;
         }
 
-        res.status(200).json({ success: true, message: "Notification stored in DB" });
+        // ✅ Fetch Updated Notifications & Return Them
+        const { data, error: fetchError } = await supabase.from("notifications").select("*");
+
+        if (fetchError) {
+            res.status(500).json({ error: fetchError.message });
+            return;
+        }
+
+        res.status(200).json({ success: true, notifications: data });
     } catch (error) {
         console.error("Error sending notification:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+// ✅ Route to Fetch Notifications
+app.get("/get-notifications", async (req: express.Request, res: express.Response) => {
+    try {
+        const { data, error } = await supabase.from("notifications").select("*");
+
+        if (error) {
+            res.status(500).json({ error: error.message });
+            return;
+        }
+
+        res.status(200).json({ notifications: data });
+    } catch (error) {
+        console.error("Error fetching notifications:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 });
