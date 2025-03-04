@@ -88,13 +88,46 @@ export default function NotificationsPage() {
     }
   };
 
-  const handleSend = () => {
-    // In a real app, this would send the notification
-    console.log({ type: selectedType, event: selectedEvent, message });
+  const handleSend = async () => {
+    if (!selectedType || !selectedEvent || !message) {
+        alert("Please fill in all fields.");
+        return;
+    }
+
+    const notificationData = {
+        type: selectedType,
+        event: selectedEvent,
+        message,
+    };
+
+    try {
+        const response = await fetch("http://localhost:5000/send-notification", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(notificationData),
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert("Notification sent successfully!");
+        } else {
+            alert("Failed to send notification: " + result.error);
+        }
+
+    } catch (error) {
+        console.error("Error sending notification:", error);
+        alert("An error occurred while sending the notification.");
+    }
+
+    // Clear input fields after sending
     setSelectedType("");
     setSelectedEvent("");
     setMessage("");
-  };
+};
+
 
   return (
     <div className="flex-1 space-y-6 p-8 pt-6">
