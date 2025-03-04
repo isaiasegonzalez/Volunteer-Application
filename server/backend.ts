@@ -20,7 +20,7 @@ if (!supabaseUrl || !supabaseKey) {
     process.exit(1);
 }
 
-// ✅ Send Notification & Return Updated Notifications
+// Send Notification & Return Updated Notifications
 app.post("/send-notification", async (req: express.Request, res: express.Response) => {
     try {
         const { type, event, message, status } = req.body;
@@ -30,7 +30,6 @@ app.post("/send-notification", async (req: express.Request, res: express.Respons
             return;
         }
 
-        // ✅ Use Supabase default status unless provided
         const newNotification: any = { type, event, message };
         if (status) newNotification.status = status;
 
@@ -42,7 +41,7 @@ app.post("/send-notification", async (req: express.Request, res: express.Respons
             return;
         }
 
-        // ✅ Fetch Updated Notifications & Return Them
+        // Fetch Updated Notifications & Return Them
         const { data, error: fetchError } = await supabase.from("notifications").select("*");
 
         if (fetchError) {
@@ -57,7 +56,7 @@ app.post("/send-notification", async (req: express.Request, res: express.Respons
     }
 });
 
-// ✅ Route to Fetch Notifications
+// Route to Fetch Notifications
 app.get("/get-notifications", async (req: express.Request, res: express.Response) => {
     try {
         const { data, error } = await supabase.from("notifications").select("*");

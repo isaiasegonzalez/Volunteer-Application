@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { formatDistanceToNow } from "date-fns";
 
-// ✅ Initialize Supabase Client
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -22,7 +22,7 @@ interface Notification {
 const NotificationsPage = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // ✅ Fetch notifications from Supabase
+  // Fetch notifications from Supabase
   const fetchNotifications = async () => {
     try {
       const { data, error } = await supabase
@@ -40,7 +40,7 @@ const NotificationsPage = () => {
     }
   };
 
-  // ✅ Fetch notifications when component loads
+  // Fetch notifications when component loads
   useEffect(() => {
     fetchNotifications();
   }, []);

@@ -70,7 +70,6 @@ const urgencyLevels = [
   { label: "Critical", value: "critical" },
 ];
 
-// **💡 FETCH EVENTS FROM SUPABASE**
 interface Event {
   id: string;
   title: string;
@@ -124,7 +123,7 @@ export default function EventManagementPage() {
     setEditingEvent(event);
   }
 
-  // **💡 FORM HANDLING FOR CREATING/UPDATING EVENTS**
+  // FORM HANDLING FOR CREATING/UPDATING EVENTS
   const formSchema = z.object({
     name: z.string().min(1, "Event name is required").max(100),
     description: z.string().min(1, "Description is required"),

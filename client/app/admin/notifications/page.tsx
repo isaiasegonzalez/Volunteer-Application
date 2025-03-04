@@ -34,7 +34,6 @@ import {
 } from "@/components/ui/select";
 import { createClient } from "@supabase/supabase-js";
 
-// ✅ Initialize Supabase Client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -62,14 +61,13 @@ export default function NotificationsPage() {
   const [selectedEvent, setSelectedEvent] = useState("");
   const [message, setMessage] = useState("");
 
-  // ✅ Fetch Notifications from Supabase
   const fetchNotifications = async () => {
     try {
       const response = await fetch("http://localhost:5000/get-notifications");
       const data = await response.json();
 
       if (response.ok) {
-        setNotifications(data.notifications); // ✅ Update state with new data
+        setNotifications(data.notifications); //  Update state with new data
       } else {
         console.error("Failed to fetch notifications:", data.error);
       }
@@ -78,7 +76,7 @@ export default function NotificationsPage() {
     }
   };
 
-  // ✅ Fetch notifications on component mount
+  //  Fetch notifications on component mount
   useEffect(() => {
     fetchNotifications();
   }, []);
@@ -96,7 +94,7 @@ export default function NotificationsPage() {
     }
   };
 
-  // ✅ Handle Sending Notification & Refresh List
+  // Handle Sending Notification & Refresh List
   const handleSend = async () => {
     if (!selectedType || !selectedEvent || !message) {
       alert("Please fill in all fields.");
@@ -124,7 +122,6 @@ export default function NotificationsPage() {
       if (response.ok) {
         alert("Notification sent successfully!");
 
-        // ✅ Refresh Notifications Instantly
         await fetchNotifications();
       } else {
         alert("Failed to send notification: " + result.error);
@@ -140,12 +137,12 @@ export default function NotificationsPage() {
     setMessage("");
   };
 
-  // ✅ Handle Refresh Notification List
+  // Handle Refresh Notification List
   const handleRefresh = async () => {
     await fetchNotifications();
   };
 
-  // ✅ Handle Delete Notification
+  // Handle Delete Notification
   const handleDelete = async (id: number) => {
     const { error } = await supabase.from("notifications").delete().match({ id });
 
