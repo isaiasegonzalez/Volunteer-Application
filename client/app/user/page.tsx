@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Clock, Calendar, Maximize } from "lucide-react";
+import { Clock, Maximize } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import UserLayout from "./layout"; // Adjust path as needed
@@ -40,9 +40,9 @@ const VolunteerDashboard = () => {
 
   return (
     <UserLayout>
-      <div className="flex-1 p-6">
-        <div className="mx-auto max-w-3xl">
-          <div className="flex flex-col items-center justify-center py-8">
+      <div className="flex-1 p-4 overflow-auto max-h-screen">
+        <div className="mx-auto max-w-full w-full">
+          <div className="flex flex-col items-center justify-center py-6">
             <div className="mb-4 rounded-full bg-pink-200 p-2">
               <Image
                 src="/imgs/portraits_08-1500x1500.jpg"
@@ -62,10 +62,10 @@ const VolunteerDashboard = () => {
               <h2 className="text-lg font-semibold text-gray-800">Upcoming</h2>
               <Clock className="h-5 w-5 text-pink-400" />
             </div>
-            <div className="px-4">
+            <div className="px-2">
               {upcomingEvents.map((event, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className={`flex items-center justify-between py-4 ${
                     index < upcomingEvents.length - 1 ? "border-b border-gray-100" : ""
                   }`}

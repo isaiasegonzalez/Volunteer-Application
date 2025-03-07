@@ -3,8 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { UserSidebar } from "@/components/user-sidebar"; // Import the new UserSidebar
+import { SidebarProvider } from "@/components/ui/sidebar"; // Keep SidebarProvider
+import { UserSidebar } from "@/components/user-sidebar"; // Import UserSidebar
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,7 +13,7 @@ const supabase = createClient(
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [, setUser] = useState<any>(null);
   const router = useRouter();
 
   const handleRedirect = useCallback(() => {
@@ -22,15 +22,17 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setLoading(false);
-
-      if (!user) {
-        handleRedirect();
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) throw error;
+        setUser(user);
+        setLoading(false);
+        if (!user) handleRedirect();
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        setLoading(false);
       }
     };
-
     fetchUser();
   }, [handleRedirect]);
 
@@ -39,12 +41,13 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <UserSidebar /> {/* Replace AppSidebar with UserSidebar */}
-      <main className="p-4">
-        <SidebarTrigger />
-        {children}
-      </main>
+    <SidebarProvider> {/* Keep the SidebarProvider */}
+      <div className="flex h-screen w-screen">
+        <UserSidebar className="w-64" /> {/* Sidebar is always visible */}
+        <main className="flex-grow w-full h-full p-4">
+          {children}
+        </main>
+      </div>
     </SidebarProvider>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
-import { Home, AlertCircle } from "lucide-react";
-import Link from "next/link";
+import { AlertCircle } from "lucide-react";
+
 
 const US_STATES = [
   { value: "AL", label: "Alabama" },
@@ -184,16 +184,11 @@ const EditProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen  p-6">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold text-gray-800">Edit Profile</h1>
-          <Link
-            href="/user"
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <Home className="w-6 h-6 text-gray-600" />
-          </Link>
+
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
