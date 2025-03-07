@@ -91,7 +91,7 @@ const SignInForm: React.FC = () => {
 
       console.log("Login Success! User:", data.user);
 
-      // ✅ Ensure the user is authenticated before redirecting
+      // Ensure the user is authenticated before redirecting
       await new Promise((resolve) => setTimeout(resolve, 500)); // Small delay to avoid race conditions
 
       const { data: session } = await supabase.auth.getUser(); // Verify logged-in user

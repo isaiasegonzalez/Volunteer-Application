@@ -1,45 +1,54 @@
-import React from "react";
-import { Calendar, Users, Heart, HandHeart, Clock, Home } from "lucide-react";
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { Calendar, Home } from "lucide-react";
 import Link from "next/link";
+import { createClient } from "@supabase/supabase-js";
+import { formatDistanceToNow } from "date-fns";
+
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+interface Notification {
+  id: number;
+  event: string;
+  message: string;
+  sent: string; // Timestamp
+}
 
 const NotificationsPage = () => {
-  const notifications = [
-    {
-      id: 1,
-      type: "event",
-      content: "New volunteer opportunity: Beach Cleanup this Saturday",
-      time: "2 min ago",
-      icon: <Calendar className="w-5 h-5 text-purple-500" />,
-    },
-    {
-      id: 2,
-      type: "impact",
-      content: "You completed 10 hours of community service this month!",
-      time: "15 min ago",
-      icon: <Heart className="w-5 h-5 text-pink-500" />,
-    },
-    {
-      id: 3,
-      type: "team",
-      content: "Food Bank Team needs 3 more volunteers for tomorrow",
-      time: "1 hour ago",
-      icon: <Users className="w-5 h-5 text-purple-500" />,
-    },
-    {
-      id: 4,
-      type: "reminder",
-      content: "Reminder: You signed up for Senior Center Visit at 2 PM",
-      time: "2 hours ago",
-      icon: <Clock className="w-5 h-5 text-pink-500" />,
-    },
-    {
-      id: 5,
-      type: "appreciation",
-      content: "Local Shelter thanks you for your dedication last week",
-      time: "1 day ago",
-      icon: <HandHeart className="w-5 h-5 text-purple-500" />,
-    },
-  ];
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  // Fetch notifications from Supabase
+  const fetchNotifications = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("id, event, message, sent")
+        .order("sent", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching notifications:", error);
+      } else {
+        setNotifications(data);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
+  // Fetch notifications when component loads
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+
+const capitalizeWords = (str: string) => {
+  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+};
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -62,12 +71,14 @@ const NotificationsPage = () => {
             >
               <div className="flex items-start space-x-4">
                 <div className="p-2 bg-gray-100 rounded-full">
-                  {notification.icon}
+                  <Calendar className="w-5 h-5 text-purple-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-gray-800">{notification.content}</p>
+                  <p className="text-gray-800">
+                  <strong>New volunteer opportunity:</strong> {capitalizeWords(notification.event)}
+                  </p>
                   <p className="text-sm text-gray-500 mt-1">
-                    {notification.time}
+                    {formatDistanceToNow(new Date(notification.sent), { addSuffix: true })}
                   </p>
                 </div>
               </div>

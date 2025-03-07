@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useEffect, useState } from "react";
 import { Bell, Check, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,37 +32,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { createClient } from "@supabase/supabase-js";
 
-// Mock data
-const notifications = [
-  {
-    id: 1,
-    type: "Reminder",
-    event: "Community Cleanup Drive",
-    message: "Don't forget your gloves and water bottle!",
-    recipients: 8,
-    sent: "2024-02-13T10:00:00",
-    status: "Delivered",
-  },
-  {
-    id: 2,
-    type: "Update",
-    event: "Youth Mentorship Program",
-    message: "Location changed to Community Center",
-    recipients: 12,
-    sent: "2024-02-12T15:30:00",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    type: "Invitation",
-    event: "Emergency Food Drive",
-    message: "Urgent volunteers needed this weekend",
-    recipients: 25,
-    sent: "2024-02-11T09:15:00",
-    status: "Failed",
-  },
-];
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 const events = [
   "Community Cleanup Drive",
@@ -70,10 +46,40 @@ const events = [
   "Senior Care Visit",
 ];
 
+interface Notification {
+  id: number;
+  type: string;
+  event: string;
+  message: string;
+  sent: string;
+  status: string;
+}
+
 export default function NotificationsPage() {
-  const [selectedType, setSelectedType] = React.useState("");
-  const [selectedEvent, setSelectedEvent] = React.useState("");
-  const [message, setMessage] = React.useState("");
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [selectedType, setSelectedType] = useState("");
+  const [selectedEvent, setSelectedEvent] = useState("");
+  const [message, setMessage] = useState("");
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/get-notifications");
+      const data = await response.json();
+
+      if (response.ok) {
+        setNotifications(data.notifications); //  Update state with new data
+      } else {
+        console.error("Failed to fetch notifications:", data.error);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
+  //  Fetch notifications on component mount
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -88,12 +94,64 @@ export default function NotificationsPage() {
     }
   };
 
-  const handleSend = () => {
-    // In a real app, this would send the notification
-    console.log({ type: selectedType, event: selectedEvent, message });
+  // Handle Sending Notification & Refresh List
+  const handleSend = async () => {
+    if (!selectedType || !selectedEvent || !message) {
+      alert("Please fill in all fields.");
+      return;
+    }
+
+    const notificationData = {
+      type: selectedType,
+      event: selectedEvent,
+      message,
+      status: "Pending",
+    };
+
+    try {
+      const response = await fetch("http://localhost:5000/send-notification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(notificationData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Notification sent successfully!");
+
+        await fetchNotifications();
+      } else {
+        alert("Failed to send notification: " + result.error);
+      }
+    } catch (error) {
+      console.error("Error sending notification:", error);
+      alert("An error occurred while sending the notification.");
+    }
+
+    // Clear input fields after sending
     setSelectedType("");
     setSelectedEvent("");
     setMessage("");
+  };
+
+  // Handle Refresh Notification List
+  const handleRefresh = async () => {
+    await fetchNotifications();
+  };
+
+  // Handle Delete Notification
+  const handleDelete = async (id: number) => {
+    const { error } = await supabase.from("notifications").delete().match({ id });
+
+    if (error) {
+      alert("Failed to delete notification: " + error.message);
+    } else {
+      alert("Notification deleted!");
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    }
   };
 
   return (
@@ -132,10 +190,7 @@ export default function NotificationsPage() {
                 </div>
                 <div className="grid gap-2">
                   <label>Event</label>
-                  <Select
-                    value={selectedEvent}
-                    onValueChange={setSelectedEvent}
-                  >
+                  <Select value={selectedEvent} onValueChange={setSelectedEvent}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select event..." />
                     </SelectTrigger>
@@ -171,6 +226,9 @@ export default function NotificationsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Recent Notifications</CardTitle>
+            <Button onClick={handleRefresh} className="ml-4">
+              Refresh List
+            </Button>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[400px]">
@@ -180,7 +238,6 @@ export default function NotificationsPage() {
                     <TableHead>Type</TableHead>
                     <TableHead>Event</TableHead>
                     <TableHead>Message</TableHead>
-                    <TableHead>Recipients</TableHead>
                     <TableHead>Sent</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
@@ -190,51 +247,20 @@ export default function NotificationsPage() {
                   {notifications.map((notification) => (
                     <TableRow key={notification.id}>
                       <TableCell>
-                        <Badge variant="secondary">{notification.type}</Badge>
+                        <Badge variant="secondary">{notification.type.charAt(0).toUpperCase() + notification.type.slice(1)}</Badge>
                       </TableCell>
-                      <TableCell className="font-medium">
-                        {notification.event}
-                      </TableCell>
-                      <TableCell className="max-w-md truncate">
-                        {notification.message}
-                      </TableCell>
-                      <TableCell>{notification.recipients}</TableCell>
-                      <TableCell>
-                        {new Date(notification.sent).toLocaleString()}
-                      </TableCell>
+                      <TableCell>{notification.event.split(" ").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")}</TableCell>
+                      <TableCell>{notification.message}</TableCell>
+                      <TableCell>{new Date(notification.sent).toLocaleString()}</TableCell>
                       <TableCell>
                         <Badge variant={getStatusColor(notification.status)}>
                           {notification.status}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
-                            <Send className="h-4 w-4" />
-                          </Button>
-                          {notification.status === "Failed" && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {notification.status === "Delivered" && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <Check className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
+                        <Button variant="destructive" onClick={() => handleDelete(notification.id)}>
+                          <X className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
