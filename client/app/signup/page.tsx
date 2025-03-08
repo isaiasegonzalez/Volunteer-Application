@@ -2,6 +2,13 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 
 const BackgroundImage: React.FC = () => (
   <img
@@ -60,35 +67,44 @@ const InputField: React.FC<InputFieldProps> = ({
 
 const SignUpForm: React.FC = () => {
   const router = useRouter();
-
-  // State for form inputs and messages
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [message, setMessage] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [message, setMessage] = useState("");
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     if (password !== confirmPassword) {
-      setMessage('Passwords do not match.');
+      setMessage("Passwords do not match.");
       return;
     }
-
-    const response = await fetch('/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+  
+    const response = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-
+  
     const data = await response.json();
     if (response.ok) {
-      setMessage('Account created! Check your email to verify.');
-      setTimeout(() => router.push('/signin'), 2000); // Redirect after 2s
+      // ✅ Store user ID in localStorage
+      localStorage.setItem("tempUserId", data.userId);
+
+      // ✅ Store session
+      if (data.session) {
+        await supabase.auth.setSession(data.session);
+      }
+
+      setMessage("Account created! Redirecting...");
+      setTimeout(() => router.push("/profile"), 1500);
     } else {
       setMessage(data.error);
     }
   };
+  
+  
+  
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100 p-6 text-gray-800 rounded-xl shadow-lg w-[400px] relative">
