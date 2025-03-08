@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Clock,
   User,
@@ -12,7 +12,13 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import Link from "next/link"; // Import Link here
+import Link from "next/link";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface UpcomingEvent {
   date: string;
@@ -29,7 +35,41 @@ interface VolunteerHistory {
 const VolunteerDashboard = () => {
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
   const [activePage, setActivePage] = useState("/user");
+  const [userName, setUserName] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      setLoading(true);
+  
+      // Get the authenticated user
+      const { data: authUser, error: authError } = await supabase.auth.getUser();
+      if (authError || !authUser?.user) {
+        console.error("User not authenticated:", authError);
+        setLoading(false);
+        return;
+      }
+  
+      // Fetch the user profile from the "profile" table using authUser.id
+      const { data: profile, error: profileError } = await supabase
+        .from("profile")
+        .select("full_name")
+        .eq("id", authUser.user.id)
+        .single();
+  
+      if (profileError) {
+        console.error("Error fetching user profile:", profileError);
+      } else {
+        setUserName(profile?.full_name || "User"); // Set the name if found
+      }
+  
+      setLoading(false);
+    };
+  
+    fetchUserProfile();
+  }, []);
+  
 
   const handleNavigation = (path: string) => {
     setActivePage(path);
@@ -90,8 +130,7 @@ const VolunteerDashboard = () => {
               <div
                 className="absolute inset-0 rounded-full"
                 style={{
-                  background:
-                    "linear-gradient(90deg, #D5ABEF 0%, #E56F8C 100%)",
+                  background: "linear-gradient(90deg, #D5ABEF 0%, #E56F8C 100%)",
                 }}
               >
                 <Image
@@ -109,7 +148,9 @@ const VolunteerDashboard = () => {
                 Welcome Back,
               </h2>
               <div className="flex items-center">
-                <h1 className="text-4xl font-bold text-pink-400">Julia</h1>
+                <h1 className="text-4xl font-bold text-pink-400">
+                  {loading ? "Loading..." : userName}
+                </h1>
               </div>
             </div>
           </div>
