@@ -25,7 +25,6 @@ import { createClient } from "@supabase/supabase-js";
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
-dotenv.config();
 
 // Supabase configuration
 const supabaseUrl = process.env.SUPABASE_URL!;
