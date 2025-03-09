@@ -4,7 +4,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node --loader ts-node/esm backend.ts"
+    "start": "node --loader ts-node/esm backend.mts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
