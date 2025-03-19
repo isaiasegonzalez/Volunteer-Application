@@ -1,10 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
-import { Clock, Maximize } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  Clock,
+  User,
+  Calendar,
+  Maximize2,
+  Minimize2,
+  Bell,
+  Edit3,
+} from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import UserLayout from "./layout"; // Adjust path as needed
+import Link from "next/link";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface UpcomingEvent {
   date: string;
@@ -20,7 +34,47 @@ interface VolunteerHistory {
 
 const VolunteerDashboard = () => {
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
+  const [activePage, setActivePage] = useState("/user");
+  const [userName, setUserName] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      setLoading(true);
+  
+      // Get the authenticated user
+      const { data: authUser, error: authError } = await supabase.auth.getUser();
+      if (authError || !authUser?.user) {
+        console.error("User not authenticated:", authError);
+        setLoading(false);
+        return;
+      }
+  
+      // Fetch the user profile from the "profile" table using authUser.id
+      const { data: profile, error: profileError } = await supabase
+        .from("profile")
+        .select("full_name")
+        .eq("id", authUser.user.id)
+        .single();
+  
+      if (profileError) {
+        console.error("Error fetching user profile:", profileError);
+      } else {
+        setUserName(profile?.full_name || "User"); // Set the name if found
+      }
+  
+      setLoading(false);
+    };
+  
+    fetchUserProfile();
+  }, []);
+  
+
+  const handleNavigation = (path: string) => {
+    setActivePage(path);
+    router.push(path);
+  };
 
   const toggleHistory = () => {
     setIsHistoryExpanded((prev) => !prev);
