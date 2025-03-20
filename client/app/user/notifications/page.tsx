@@ -6,7 +6,6 @@ import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { formatDistanceToNow } from "date-fns";
 
-
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -19,8 +18,6 @@ interface Notification {
   sent: string; // Timestamp
 }
 
-import React from "react";
-import { Calendar, Users, Heart, HandHeart, Clock } from "lucide-react";
 const NotificationsPage = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
@@ -47,17 +44,21 @@ const NotificationsPage = () => {
     fetchNotifications();
   }, []);
 
-
-const capitalizeWords = (str: string) => {
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
-};
+  const capitalizeWords = (str: string) => {
+    return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  };
 
   return (
-    <div className=" p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold text-gray-800">Notifications</h1>
-
+          <Link
+            href="/user"
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <Home className="w-6 h-6 text-gray-600" />
+          </Link>
         </div>
 
         <div className="space-y-4">
@@ -72,10 +73,13 @@ const capitalizeWords = (str: string) => {
                 </div>
                 <div className="flex-1">
                   <p className="text-gray-800">
-                  <strong>New volunteer opportunity:</strong> {capitalizeWords(notification.event)}
+                    <strong>New volunteer opportunity:</strong>{" "}
+                    {capitalizeWords(notification.event)}
                   </p>
                   <p className="text-sm text-gray-500 mt-1">
-                    {formatDistanceToNow(new Date(notification.sent), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(notification.sent), {
+                      addSuffix: true,
+                    })}
                   </p>
                 </div>
               </div>

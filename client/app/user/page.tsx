@@ -1,4 +1,4 @@
-use client";
+"use client";
 
 import React, { useState } from "react";
 import { Clock, Maximize } from "lucide-react";
@@ -53,7 +53,9 @@ const VolunteerDashboard = () => {
                 priority
               />
             </div>
-            <h2 className="text-xl font-semibold text-gray-800">Welcome Back,</h2>
+            <h2 className="text-xl font-semibold text-gray-800">
+              Welcome Back,
+            </h2>
             <h1 className="text-4xl font-bold text-pink-400">Julia</h1>
           </div>
 
@@ -67,11 +69,15 @@ const VolunteerDashboard = () => {
                 <div
                   key={index}
                   className={`flex items-center justify-between py-4 ${
-                    index < upcomingEvents.length - 1 ? "border-b border-gray-100" : ""
+                    index < upcomingEvents.length - 1
+                      ? "border-b border-gray-100"
+                      : ""
                   }`}
                 >
                   <div className="text-gray-600">{event.date}</div>
-                  <div className="text-pink-400 font-medium">{event.facility}</div>
+                  <div className="text-pink-400 font-medium">
+                    {event.facility}
+                  </div>
                   <div className="text-gray-600">{event.time}</div>
                 </div>
               ))}
@@ -79,8 +85,13 @@ const VolunteerDashboard = () => {
           </div>
 
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-pink-500">Volunteer History</h2>
-            <button onClick={toggleHistory} className="text-gray-400 hover:text-pink-400">
+            <h2 className="text-xl font-semibold text-pink-500">
+              Volunteer History
+            </h2>
+            <button
+              onClick={toggleHistory}
+              className="text-gray-400 hover:text-pink-400"
+            >
               <Maximize className="h-4 w-4" />
             </button>
           </div>
@@ -89,21 +100,35 @@ const VolunteerDashboard = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  <th className="py-3 px-4 text-left font-medium text-gray-600">Date</th>
-                  <th className="py-3 px-4 text-left font-medium text-gray-600">Facility</th>
-                  <th className="py-3 px-4 text-right font-medium text-gray-600">Points</th>
+                  <th className="py-3 px-4 text-left font-medium text-gray-600">
+                    Date
+                  </th>
+                  <th className="py-3 px-4 text-left font-medium text-gray-600">
+                    Facility
+                  </th>
+                  <th className="py-3 px-4 text-right font-medium text-gray-600">
+                    Points
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {(isHistoryExpanded ? volunteerHistory : volunteerHistory.slice(0, 2)).map(
-                  (history, index) => (
-                    <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                      <td className="py-4 px-4 text-gray-600">{history.date}</td>
-                      <td className="py-4 px-4 text-pink-400 font-medium">{history.facility}</td>
-                      <td className="py-4 px-4 text-right font-medium">{history.points}</td>
-                    </tr>
-                  )
-                )}
+                {(isHistoryExpanded
+                  ? volunteerHistory
+                  : volunteerHistory.slice(0, 2)
+                ).map((history, index) => (
+                  <tr
+                    key={index}
+                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                  >
+                    <td className="py-4 px-4 text-gray-600">{history.date}</td>
+                    <td className="py-4 px-4 text-pink-400 font-medium">
+                      {history.facility}
+                    </td>
+                    <td className="py-4 px-4 text-right font-medium">
+                      {history.points}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
