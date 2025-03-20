@@ -1,5 +1,10 @@
-
 import "dotenv/config";
+
+console.log("Debug: SUPABASE_URL =", process.env.SUPABASE_URL || "MISSING");
+console.log(
+  "Debug: SUPABASE_KEY =",
+  process.env.SUPABASE_ANON_KEY || "MISSING"
+);
 
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Promise Rejection:");
@@ -100,3 +105,110 @@ app.listen(PORT, () => {
 });
 
 console.log("Server is running.");
+
+// Routes for volunteer events
+app.post("/volunteer-events", async (req: express.Request, res: express.Response) => {
+  try {
+    const { user_id, facility, date } = req.body;
+    
+    if (!user_id || !facility || !date) {
+      return res.status(400).json({ 
+        error: "Missing required fields: user_id, facility, date" 
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("volunteer_events")
+      .insert([{ user_id, facility, date }])
+      .select();
+
+    if (error) {
+      console.error("Error creating volunteer event:", error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.status(201).json({ success: true, event: data[0] });
+  } catch (error) {
+    console.error("Server error creating volunteer event:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return res.status(500).json({ error: errorMessage });
+  }
+});
+
+// Route to get upcoming volunteer events for a user
+app.get("/volunteer-events/:userId", async (req: express.Request, res: express.Response) => {
+  try {
+    const userId = req.params.userId;
+    
+    const { data, error } = await supabase
+      .from("volunteer_events")
+      .select("*")
+      .eq("user_id", userId)
+      .gt("date", new Date().toISOString())
+      .order("date", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching volunteer events:", error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.status(200).json({ events: data });
+  } catch (error) {
+    console.error("Server error fetching volunteer events:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return res.status(500).json({ error: errorMessage });
+  }
+});
+
+// Route to log new volunteer history
+app.post("/volunteer-history", async (req: express.Request, res: express.Response) => {
+  try {
+    const { user_id, facility, date, points } = req.body;
+    
+    if (!user_id || !facility || !date || points === undefined) {
+      return res.status(400).json({ 
+        error: "Missing required fields: user_id, facility, date, points" 
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("volunteer_history")
+      .insert([{ user_id, facility, date, points }])
+      .select();
+
+    if (error) {
+      console.error("Error logging volunteer history:", error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.status(201).json({ success: true, history: data[0] });
+  } catch (error) {
+    console.error("Server error logging volunteer history:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return res.status(500).json({ error: errorMessage });
+  }
+});
+
+// Route to get volunteer history for a user
+app.get("/volunteer-history/:userId", async (req: express.Request, res: express.Response) => {
+  try {
+    const userId = req.params.userId;
+    
+    const { data, error } = await supabase
+      .from("volunteer_history")
+      .select("*")
+      .eq("user_id", userId)
+      .order("date", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching volunteer history:", error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.status(200).json({ history: data });
+  } catch (error) {
+    console.error("Server error fetching volunteer history:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return res.status(500).json({ error: errorMessage });
+  }
+});
