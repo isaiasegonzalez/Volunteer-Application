@@ -1,10 +1,5 @@
-import "dotenv/config";
 
-console.log("Debug: SUPABASE_URL =", process.env.SUPABASE_URL || "MISSING");
-console.log(
-  "Debug: SUPABASE_KEY =",
-  process.env.SUPABASE_ANON_KEY || "MISSING"
-);
+import "dotenv/config";
 
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Promise Rejection:");

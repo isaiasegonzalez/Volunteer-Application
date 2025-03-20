@@ -22,38 +22,40 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useRouter } from "next/navigation";
 // import { toast } from "@/components/ui/use-toast";
-
 // Mock data
 const volunteers = [
   {
     id: 1,
     name: "John Doe",
-    skills: ["First Aid", "Driving", "Manual Labor"],
-    location: "Downtown",
-    availability: ["Weekends", "Evening"],
-    eventsParticipated: 5,
-    rating: 4.8,
+    skills: ["First Aid", "Manual Labor"],
+    location: "New York",
+    availability: ["2024-03-10", "2024-03-15"],
   },
   {
     id: 2,
     name: "Jane Smith",
     skills: ["Teaching", "Counseling", "Event Planning"],
-    location: "Suburbs",
-    availability: ["Weekdays", "Morning"],
-    eventsParticipated: 8,
-    rating: 4.9,
+    location: "Los Angeles",
+    availability: ["2024-03-20", "2024-03-25"],
   },
-  // Add more volunteers...
+  {
+    id: 3,
+    name: "Michael Brown",
+    skills: ["Cooking", "Manual Labor", "Driving"],
+    location: "Dallas",
+    availability: ["2024-03-10", "2024-03-18"],
+  },
 ];
 
 const events = [
   {
     id: 1,
     name: "Community Cleanup Drive",
-    date: "2024-02-20",
-    location: "Downtown",
-    requiredSkills: ["Manual Labor"],
+    date: "2024-03-10",
+    location: "New York",
+    requiredSkills: ["Manual Labor", "Driving"],
     currentParticipants: 3,
     requiredParticipants: 10,
     status: "Low Participation",
@@ -61,31 +63,47 @@ const events = [
   {
     id: 2,
     name: "Youth Mentorship Program",
-    date: "2024-02-25",
-    location: "Suburbs",
+    date: "2024-03-20",
+    location: "Los Angeles",
     requiredSkills: ["Teaching", "Counseling"],
     currentParticipants: 8,
     requiredParticipants: 10,
     status: "Almost Full",
   },
-  // Add more events...
 ];
 
-// Helper function to calculate match score
 function calculateMatchScore(
-  volunteer: (typeof volunteers)[0],
-  event: (typeof events)[0]
+  volunteer: {
+    id: number;
+    name: string;
+    skills: string[];
+    location: string;
+    availability: string[];
+  },
+  event: {
+    id: number;
+    name: string;
+    date: string;
+    location: string;
+    requiredSkills: string[];
+    currentParticipants: number;
+    requiredParticipants: number;
+    status: string;
+  }
 ) {
   let score = 0;
 
-  // Skills match
+  // Skills match (each matching skill adds 2 points)
   const skillsMatch = volunteer.skills.filter((skill) =>
     event.requiredSkills.includes(skill)
   ).length;
   score += skillsMatch * 2;
 
-  // Location match
+  // Location match (add 3 points if in the same city)
   if (volunteer.location === event.location) score += 3;
+
+  // Availability match (add 3 points if available on the event date)
+  if (volunteer.availability.includes(event.date)) score += 3;
 
   return score;
 }
@@ -94,16 +112,27 @@ export default function VolunteerMatchingPage() {
   // const [selectedEvent, setSelectedEvent] = React.useState<
   //   (typeof events)[0] | null
   // >(null);
+  const router = useRouter();
 
   // Get suggested volunteers for an event
-  const getSuggestedVolunteers = (event: (typeof events)[0]) => {
+  const getSuggestedVolunteers = (event: {
+    id: number;
+    name: string;
+    date: string;
+    location: string;
+    requiredSkills: string[];
+    currentParticipants: number;
+    requiredParticipants: number;
+    status: string;
+  }) => {
     return volunteers
       .map((volunteer) => ({
         ...volunteer,
         matchScore: calculateMatchScore(volunteer, event),
       }))
-      .sort((a, b) => b.matchScore - a.matchScore)
-      .slice(0, 5); // Top 5 matches
+      .filter((volunteer) => volunteer.matchScore > 0) // Only include relevant matches
+      .sort((a, b) => b.matchScore - a.matchScore) // Sort by best match
+      .slice(0, 5); // Return the top 5 matches
   };
 
   // const handleInvite = (
@@ -211,10 +240,6 @@ export default function VolunteerMatchingPage() {
                                       <TableRow key={volunteer.id}>
                                         <TableCell className="font-medium">
                                           {volunteer.name}
-                                          <div className="text-sm text-muted-foreground">
-                                            {volunteer.eventsParticipated}{" "}
-                                            events • {volunteer.rating} ★
-                                          </div>
                                         </TableCell>
                                         <TableCell>
                                           {volunteer.skills.map((skill) => (
@@ -247,9 +272,11 @@ export default function VolunteerMatchingPage() {
                                         <TableCell>
                                           <Button
                                             size="sm"
-                                            // onClick={() =>
-                                            //   handleInvite(volunteer, event)
-                                            // }
+                                            onClick={() =>
+                                              router.push(
+                                                "/admin/notifications"
+                                              )
+                                            }
                                           >
                                             <Send className="mr-2 h-4 w-4" />
                                             Invite
