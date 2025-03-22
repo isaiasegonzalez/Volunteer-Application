@@ -229,7 +229,7 @@ const VolunteerDashboard = () => {
         <h2 className="text-2xl font-semibold text-pink-400">
           Volunteer History
         </h2>
-        <button onClick={toggleHistory} className="transition-transform">
+        <button onClick={toggleHistory} className="transition-transform" data-testid="toggle-history">
           {isHistoryExpanded ? (
             <Minimize2 className="text-pink-400 w-5 h-5" />
           ) : (
