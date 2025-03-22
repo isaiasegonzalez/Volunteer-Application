@@ -29,7 +29,6 @@ interface Event {
   location: string;
 }
 
-// Stats will be static for now (unless you want them dynamic too)
 const stats = [
   {
     title: "Total Events",
