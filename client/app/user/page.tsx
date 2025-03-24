@@ -28,6 +28,10 @@ interface VolunteerHistory {
   user_id: string;
 }
 
+const capitalizeWords = (str: string) => {
+  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
 const VolunteerDashboard = () => {
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
@@ -71,9 +75,9 @@ const VolunteerDashboard = () => {
         .from("volunteer_events")
         .select("*")
         .eq("user_id", userId)
-        .gt("date", new Date().toISOString())
+        //.gt("date", new Date().toISOString())
         .order("date", { ascending: true })
-        .limit(5);
+        
 
       if (eventsError) {
         console.error("Error fetching upcoming events:", eventsError);
@@ -211,7 +215,7 @@ const VolunteerDashboard = () => {
               >
                 <div className="text-gray-600">{event.date}</div>
                 <div className="text-pink-400 font-medium">
-                  {event.facility}
+                {capitalizeWords(event.facility)}
                 </div>
                 <div className="text-gray-600">{event.time}</div>
               </div>
