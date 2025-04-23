@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, Maximize2, Minimize2, Bell, Edit3 } from "lucide-react";
+import { Clock, Maximize2, Minimize2, Bell, Edit3, Check } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -11,26 +11,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
-
-interface UpcomingEvent {
-  id: number;
-  date: string;
-  facility: string;
-  time: string;
-  user_id?: string;
-}
-
-interface VolunteerHistory {
-  id: number;
-  date: string;
-  facility: string;
-  points: number;
-  user_id: string;
-}
-
-const capitalizeWords = (str: string) => {
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
-};
 
 const VolunteerDashboard = () => {
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
@@ -42,102 +22,187 @@ const VolunteerDashboard = () => {
   );
   const router = useRouter();
 
+  interface UpcomingEvent {
+    id: number;
+    date: string;
+    facility: string;
+    time: string;
+    user_id?: string;
+  }
+
+  interface VolunteerHistory {
+    id: number;
+    date: string;
+    facility: string;
+    points: number;
+    user_id: string;
+  }
+
+  const capitalizeWords = (str: string) => {
+    return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
   useEffect(() => {
     const fetchUserData = async () => {
       setLoading(true);
 
-      // Get the authenticated user
-      const { data: authData, error: authError } =
-        await supabase.auth.getUser();
-      if (authError || !authData?.user) {
-        console.error("User not authenticated:", authError);
-        setLoading(false);
-        return;
-      }
-
-      const userId = authData.user.id;
-
-      // Fetch the user profile from the "profile" table
-      const { data: profile, error: profileError } = await supabase
-        .from("profile")
-        .select("full_name")
-        .eq("id", userId)
-        .single();
-
-      if (profileError) {
-        console.error("Error fetching user profile:", profileError);
-      } else {
-        setUserName(profile?.full_name || "User");
-      }
-
-      // Fetch upcoming events
-      const { data: events, error: eventsError } = await supabase
-        .from("volunteer_events")
-        .select("*")
-        .eq("user_id", userId)
-        //.gt("date", new Date().toISOString())
-        .order("date", { ascending: true })
+      try {
+        // Get the authenticated user
+        const { data: authData, error: authError } =
+          await supabase.auth.getUser();
         
+        if (authError || !authData?.user) {
+          console.error("User not authenticated:", authError);
+          setLoading(false);
+          router.push('/login');
+          return;
+        }
 
-      if (eventsError) {
-        console.error("Error fetching upcoming events:", eventsError);
-      } else {
-        // Format dates for display
-        const formattedEvents =
-          events?.map((event) => ({
-            id: event.id,
-            date: new Date(event.date).toLocaleDateString("en-US", {
-              month: "2-digit",
-              day: "2-digit",
-            }),
-            facility: event.facility,
-            time: new Date(event.date).toLocaleTimeString("en-US", {
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: true,
-            }),
-            user_id: event.user_id,
-          })) || [];
+        const userId = authData.user.id;
 
-        setUpcomingEvents(formattedEvents);
+        // Fetch the user profile from the "profile" table
+        const { data: profile, error: profileError } = await supabase
+          .from("profile")
+          .select("full_name")
+          .eq("id", userId)
+          .single();
+
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError);
+        } else {
+          setUserName(profile?.full_name || "User");
+        }
+
+        // Fetch upcoming events
+        const { data: events, error: eventsError } = await supabase
+          .from("volunteer_events")
+          .select("*")
+          .eq("user_id", userId)
+          .order("date", { ascending: true });
+
+        if (eventsError) {
+          console.error("Error fetching upcoming events:", eventsError);
+        } else {
+          // Format dates for display
+          const formattedEvents =
+            events?.map((event) => ({
+              id: event.id,
+              date: new Date(event.date).toLocaleDateString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+              }),
+              facility: event.facility,
+              time: new Date(event.date).toLocaleTimeString("en-US", {
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              }),
+              user_id: event.user_id,
+            })) || [];
+
+          setUpcomingEvents(formattedEvents);
+        }
+
+        // Fetch volunteer history
+        const { data: history, error: historyError } = await supabase
+          .from("volunteer_history")
+          .select("*")
+          .eq("user_id", userId)
+          .order("date", { ascending: false })
+          .limit(10);
+
+        if (historyError) {
+          console.error("Error fetching volunteer history:", historyError);
+        } else {
+          // Format dates for display
+          const formattedHistory =
+            history?.map((entry) => ({
+              id: entry.id,
+              date: new Date(entry.date).toLocaleDateString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "2-digit",
+              }),
+              facility: entry.facility,
+              points: entry.points,
+              user_id: entry.user_id,
+            })) || [];
+
+          setVolunteerHistory(formattedHistory);
+        }
+      } catch (error) {
+        console.error("Unexpected error:", error);
+        router.push('/login');
+      } finally {
+        setLoading(false);
       }
-
-      // Fetch volunteer history
-      const { data: history, error: historyError } = await supabase
-        .from("volunteer_history")
-        .select("*")
-        .eq("user_id", userId)
-        .order("date", { ascending: false })
-        .limit(10);
-
-      if (historyError) {
-        console.error("Error fetching volunteer history:", historyError);
-      } else {
-        // Format dates for display
-        const formattedHistory =
-          history?.map((entry) => ({
-            id: entry.id,
-            date: new Date(entry.date).toLocaleDateString("en-US", {
-              month: "2-digit",
-              day: "2-digit",
-              year: "2-digit",
-            }),
-            facility: entry.facility,
-            points: entry.points,
-            user_id: entry.user_id,
-          })) || [];
-
-        setVolunteerHistory(formattedHistory);
-      }
-
-      setLoading(false);
     };
 
     fetchUserData();
-  }, []);
+  }, [router]);
 
   const toggleHistory = () => {
     setIsHistoryExpanded((prev) => !prev);
+  };
+
+  const handleCompleteEvent = async (event: UpcomingEvent) => {
+    try {
+      // Prepare new history entry
+      const newHistoryEntry: VolunteerHistory = {
+        id: event.id,
+        date: new Date().toLocaleDateString("en-US", {
+          month: "2-digit",
+          day: "2-digit",
+          year: "2-digit",
+        }),
+        facility: event.facility,
+        points: 10, // Default points, adjust as needed
+        user_id: event.user_id || '',
+      };
+
+      // Remove event from upcoming events
+      const updatedUpcomingEvents = upcomingEvents.filter(
+        (e) => e.id !== event.id
+      );
+      setUpcomingEvents(updatedUpcomingEvents);
+
+      // Update volunteer history locally
+      const updatedVolunteerHistory = [newHistoryEntry, ...volunteerHistory];
+      setVolunteerHistory(updatedVolunteerHistory);
+
+      // Delete the event from volunteer_events table
+      const { error: deleteError } = await supabase
+        .from("volunteer_events")
+        .delete()
+        .eq("id", event.id);
+
+      // Add entry to volunteer_history table
+      const { error: insertError } = await supabase.from("volunteer_history").insert({
+        date: new Date().toISOString(),
+        facility: event.facility,
+        points: 10,
+        user_id: event.user_id,
+      });
+
+      if (deleteError) {
+        console.error("Error deleting event:", deleteError);
+        // Revert local state changes if database deletion fails
+        setUpcomingEvents([...upcomingEvents, event]);
+        setVolunteerHistory(volunteerHistory);
+      }
+
+      if (insertError) {
+        console.error("Error inserting history:", insertError);
+        // Revert local state changes if insertion fails
+        setUpcomingEvents([...upcomingEvents, event]);
+        setVolunteerHistory(volunteerHistory);
+      }
+    } catch (error) {
+      console.error("Error in handleCompleteEvent:", error);
+      // Revert local state changes in case of any unexpected error
+      setUpcomingEvents([...upcomingEvents, event]);
+      setVolunteerHistory(volunteerHistory);
+    }
   };
 
   return (
@@ -215,9 +280,15 @@ const VolunteerDashboard = () => {
               >
                 <div className="text-gray-600">{event.date}</div>
                 <div className="text-pink-400 font-medium">
-                {capitalizeWords(event.facility)}
+                  {capitalizeWords(event.facility)}
                 </div>
                 <div className="text-gray-600">{event.time}</div>
+                <button 
+                  onClick={() => handleCompleteEvent(event)}
+                  className="text-green-500 hover:text-green-600 transition-colors"
+                >
+                  <Check className="w-5 h-5" />
+                </button>
               </div>
             ))
           ) : (
@@ -244,54 +315,56 @@ const VolunteerDashboard = () => {
 
       {/* Volunteer History Table */}
       <div className="rounded-xl bg-white shadow-sm overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-100">
-            <tr>
-              <th className="py-3 px-4 text-left font-medium text-gray-600">
-                Date
-              </th>
-              <th className="py-3 px-4 text-left font-medium text-gray-600">
-                Facility
-              </th>
-              <th className="py-3 px-4 text-right font-medium text-gray-600">
-                Points
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+        <div className={`max-h-${isHistoryExpanded ? '96' : '24'} overflow-y-auto`}>
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-100 sticky top-0">
               <tr>
-                <td colSpan={3} className="py-4 px-4 text-center text-gray-500">
-                  Loading history...
-                </td>
+                <th className="py-3 px-4 text-left font-medium text-gray-600">
+                  Date
+                </th>
+                <th className="py-3 px-4 text-left font-medium text-gray-600">
+                  Facility
+                </th>
+                <th className="py-3 px-4 text-right font-medium text-gray-600">
+                  Points
+                </th>
               </tr>
-            ) : volunteerHistory.length > 0 ? (
-              (isHistoryExpanded
-                ? volunteerHistory
-                : volunteerHistory.slice(0, 2)
-              ).map((history, index) => (
-                <tr
-                  key={history.id}
-                  className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                >
-                  <td className="py-4 px-4 text-gray-600">{history.date}</td>
-                  <td className="py-4 px-4 text-pink-400 font-medium">
-                    {history.facility}
-                  </td>
-                  <td className="py-4 px-4 text-right font-medium">
-                    {history.points}
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={3} className="py-4 px-4 text-center text-gray-500">
+                    Loading history...
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={3} className="py-4 px-4 text-center text-gray-500">
-                  No volunteer history found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              ) : volunteerHistory.length > 0 ? (
+                (isHistoryExpanded
+                  ? volunteerHistory
+                  : volunteerHistory.slice(0, 2)
+                ).map((history, index) => (
+                  <tr
+                    key={history.id}
+                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                  >
+                    <td className="py-4 px-4 text-gray-600">{history.date}</td>
+                    <td className="py-4 px-4 text-pink-400 font-medium">
+                      {history.facility}
+                    </td>
+                    <td className="py-4 px-4 text-right font-medium">
+                      {history.points}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={3} className="py-4 px-4 text-center text-gray-500">
+                    No volunteer history found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
