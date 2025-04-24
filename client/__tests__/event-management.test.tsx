@@ -3,6 +3,7 @@ import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom"; // needed for toBeInTheDocument
 import EventManagementPage from "@/app/admin/events/page";
 
+
 // Mock global fetch
 beforeEach(() => {
   global.fetch = jest.fn(() =>
@@ -39,17 +40,70 @@ describe("EventManagementPage", () => {
   });
 
   test("renders event data after fetch", async () => {
-    render(<EventManagementPage />);
-    await waitFor(() =>
-      expect(screen.getByText("Sample Event")).toBeInTheDocument()
-    );
-    expect(screen.getByText("Houston")).toBeInTheDocument();
-    expect(screen.getByText("Active")).toBeInTheDocument();
+    await waitFor(async () => {
+      render(<EventManagementPage />);
+      expect(await screen.findByText("Sample Event")).toBeInTheDocument();
+      expect(await screen.findByText("Houston")).toBeInTheDocument();
+      expect(await screen.findByText("Active")).toBeInTheDocument();
+    });
   });
 
-  test("renders form title", () => {
-    render(<EventManagementPage />);
-    const titles = screen.getAllByText(/create event/i);
-    expect(titles.length).toBeGreaterThan(0); // button and header both show it
+  test("renders form title", async () => {
+    await waitFor(async () => {
+      render(<EventManagementPage />);
+      const titles = await screen.findAllByText(/create event/i);
+      expect(titles.length).toBeGreaterThan(0);
+    });
   });
+
+  
+  test("shows error when fetchEvents fails", async () => {
+  (global.fetch as jest.Mock).mockImplementationOnce(() =>
+    Promise.resolve({
+      ok: false,
+      json: () => Promise.resolve({ error: "Failed to fetch" }),
+    })
+  );
+  render(<EventManagementPage />);
+  const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+  await waitFor(() => {
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Error fetching events:", "Failed to fetch"
+    );
+  });
+  errorSpy.mockRestore();
+});
+
+
+  test("deletes an event successfully", async () => {
+    render(<EventManagementPage />);
+    
+    (global.fetch as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({ ok: true })
+    );
+    
+    const deleteButton = await screen.findByText(/delete/i);
+    window.alert = jest.fn();
+    deleteButton.click();
+    
+    await waitFor(() => {
+      expect(window.alert).toHaveBeenCalledWith("Event deleted successfully!");
+    });
+  });
+
+
+  test("shows error alert on failed delete", async () => {
+    render(<EventManagementPage />);
+    (global.fetch as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({ ok: false })
+    );
+    const deleteButton = await screen.findByText(/delete/i);
+    window.alert = jest.fn();
+    deleteButton.click();
+    await waitFor(() => {
+    expect(window.alert).toHaveBeenCalledWith("Error deleting event.");
+    });
+  });
+
+  
 });

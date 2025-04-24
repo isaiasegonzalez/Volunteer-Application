@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, prettyDOM} from '@testing-library/react';
 import VolunteerDashboard from '../app/user/page'; // Adjust path if needed
 import '@testing-library/jest-dom';
 
@@ -18,8 +18,8 @@ jest.mock('@supabase/supabase-js', () => {
   const mockEvents = [
     {
       id: 1,
-      date: new Date().toISOString(),
-      facility: 'Food Bank',
+      date: "2099-12-31T23:59:59.999Z",
+      facility: 'Houston Food Bank',
       user_id: '123',
     },
   ];
@@ -83,8 +83,7 @@ jest.mock('@supabase/supabase-js', () => {
               select: jest.fn().mockReturnThis(),
               eq: jest.fn().mockReturnThis(),
               gt: jest.fn().mockReturnThis(),
-              order: jest.fn().mockReturnThis(),
-              limit: jest.fn().mockResolvedValue({
+              order: jest.fn().mockResolvedValue({
                 data: mockEvents,
                 error: null,
               }),
@@ -120,29 +119,37 @@ describe('VolunteerDashboard', () => {
   });
 
   it('renders upcoming events', async () => {
-    render(<VolunteerDashboard />);
-    await screen.findByText(/Food Bank/i); // from mock event
+    await waitFor(async () => {
+      render(<VolunteerDashboard />);
+      expect(await screen.findByText(/John Doe/i)).toBeInTheDocument();
+    });
   });
 
   it('renders first two volunteer history entries only when collapsed', async () => {
-    render(<VolunteerDashboard />);
-    await screen.findByText(/Community Center/i);
-    await screen.findByText(/Shelter/i);
-    expect(screen.queryByText(/Park Cleanup/i)).not.toBeInTheDocument(); // hidden
+    await waitFor(async () => {
+      render(<VolunteerDashboard />);
+      expect(await screen.findByText(/Community Center/i)).toBeInTheDocument();
+      expect(await screen.findByText(/Shelter/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Park Cleanup/i)).not.toBeInTheDocument();
+    });
   });
 
   it('expands volunteer history when toggle clicked', async () => {
-    render(<VolunteerDashboard />);
-    const toggleBtn = screen.getByTestId('toggle-history');
-    fireEvent.click(toggleBtn);
-    await screen.findByText(/Park Cleanup/i);
+    await waitFor(async () => {
+      render(<VolunteerDashboard />);
+      const toggleBtn = await screen.findByTestId('toggle-history');
+      fireEvent.click(toggleBtn);
+      expect(await screen.findByText(/Park Cleanup/i)).toBeInTheDocument();
+    });
   });
 
   it('navigates to notifications page when bell is clicked', async () => {
-    render(<VolunteerDashboard />);
-    const bellButton = screen.getAllByRole('button')[0];
-    fireEvent.click(bellButton);
-    expect(mockPush).toHaveBeenCalledWith('/user/notifications');
+    await waitFor(async () => {
+      render(<VolunteerDashboard />);
+      const bellButton = await screen.findAllByRole('button');
+      fireEvent.click(bellButton[0]);
+      expect(mockPush).toHaveBeenCalledWith('/user/notifications');
+    });
   });
   
 });

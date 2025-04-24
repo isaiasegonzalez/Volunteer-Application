@@ -139,7 +139,7 @@ const VolunteerDashboard = () => {
     };
 
     fetchUserData();
-  }, [router]);
+  }, []);
 
   const toggleHistory = () => {
     setIsHistoryExpanded((prev) => !prev);
