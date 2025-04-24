@@ -2,12 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/supabaseClient";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 
 const BackgroundImage: React.FC = () => (
@@ -92,10 +88,7 @@ const SignUpForm: React.FC = () => {
       localStorage.setItem("tempUserId", data.userId);
 
       // ✅ Store session
-      if (data.session) {
-        await supabase.auth.setSession(data.session);
-      }
-
+      
       setMessage("Account created! Redirecting...");
       setTimeout(() => router.push("/profile"), 1500);
     } else {

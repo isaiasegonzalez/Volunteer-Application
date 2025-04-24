@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, waitFor, cleanup } from "@testing-library/react";
-import "@testing-library/jest-dom"; // needed for toBeInTheDocument
+import "@testing-library/jest-dom";
 import EventManagementPage from "@/app/admin/events/page";
 
 
