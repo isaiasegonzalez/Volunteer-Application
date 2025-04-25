@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Card,
@@ -16,7 +16,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Users, Activity } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -121,32 +120,18 @@ export default function DashboardPage() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Volunteers</TableHead>
                     <TableHead>Location</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {recentEvents.map((event) => (
                     <TableRow key={event.id}>
-                      <TableCell className="font-medium">{event.title}</TableCell>
+                      <TableCell className="font-medium">
+                        {event.title}
+                      </TableCell>
                       <TableCell>
                         {new Date(event.date).toLocaleDateString()}
                       </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            event.status === "Active"
-                              ? "default"
-                              : event.status === "Completed"
-                              ? "secondary"
-                              : "outline"
-                          }
-                        >
-                          {event.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{event.volunteers ?? 0}</TableCell>
                       <TableCell>{event.location}</TableCell>
                     </TableRow>
                   ))}

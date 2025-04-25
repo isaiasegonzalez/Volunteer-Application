@@ -213,7 +213,6 @@ export default function VolunteerMatchingPage() {
                         <TableHead>Date</TableHead>
                         <TableHead>Location</TableHead>
                         <TableHead>Required Skills</TableHead>
-                        <TableHead>Participation</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -228,7 +227,10 @@ export default function VolunteerMatchingPage() {
                           </TableCell>
                           <TableCell>{event.location}</TableCell>
                           <TableCell>
-                            {event.required_skills?.map((skill) => (
+                            {(Array.isArray(event.required_skills)
+                              ? event.required_skills
+                              : JSON.parse(event.required_skills || "[]")
+                            ).map((skill: string) => (
                               <Badge
                                 key={skill}
                                 variant="secondary"
@@ -237,18 +239,6 @@ export default function VolunteerMatchingPage() {
                                 {skill}
                               </Badge>
                             ))}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                event.status === "Low Participation"
-                                  ? "destructive"
-                                  : "default"
-                              }
-                            >
-                              {event.currentParticipants}/
-                              {event.requiredParticipants}
-                            </Badge>
                           </TableCell>
                           <TableCell>
                             <Dialog>

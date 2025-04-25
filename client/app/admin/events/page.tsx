@@ -40,7 +40,6 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -113,7 +112,7 @@ export default function EventManagementPage() {
 
     if (response.ok) {
       alert("Event deleted successfully!");
-      setEvents(events.filter(event => event.id !== id));
+      setEvents(events.filter((event) => event.id !== id));
     } else {
       alert("Error deleting event.");
     }
@@ -163,7 +162,11 @@ export default function EventManagementPage() {
     });
 
     if (response.ok) {
-      alert(editingEvent ? "Event updated successfully!" : "Event created successfully!");
+      alert(
+        editingEvent
+          ? "Event updated successfully!"
+          : "Event created successfully!"
+      );
       window.location.reload();
     } else {
       alert("Error saving event.");
@@ -179,7 +182,9 @@ export default function EventManagementPage() {
         <Card className="w-2/3">
           <CardHeader>
             <CardTitle>Recent Events</CardTitle>
-            <CardDescription>Overview of the latest volunteer events</CardDescription>
+            <CardDescription>
+              Overview of the latest volunteer events
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[400px]">
@@ -191,8 +196,6 @@ export default function EventManagementPage() {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Volunteers</TableHead>
                       <TableHead>Location</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -200,16 +203,28 @@ export default function EventManagementPage() {
                   <TableBody>
                     {events.map((event) => (
                       <TableRow key={event.id}>
-                        <TableCell className="font-medium">{event.title}</TableCell>
-                        <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <Badge variant="default">{event.status}</Badge>
+                        <TableCell className="font-medium">
+                          {event.title}
                         </TableCell>
-                        <TableCell>{event.volunteers ?? 0}</TableCell>
+                        <TableCell>
+                          {new Date(event.date).toLocaleDateString()}
+                        </TableCell>
                         <TableCell>{event.location}</TableCell>
                         <TableCell>
-                          <Button size="sm" variant="outline" onClick={() => editEvent(event)}>Edit</Button>
-                          <Button size="sm" variant="destructive" onClick={() => deleteEvent(event.id)}>Delete</Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => editEvent(event)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => deleteEvent(event.id)}
+                          >
+                            Delete
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -223,33 +238,67 @@ export default function EventManagementPage() {
         {/* CREATE/EDIT EVENT FORM */}
         <Card>
           <CardHeader>
-            <CardTitle>{editingEvent ? "Edit Event" : "Create Event"}</CardTitle>
+            <CardTitle>
+              {editingEvent ? "Edit Event" : "Create Event"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <FormField control={form.control} name="name" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Event Name</FormLabel>
-                    <FormControl><Input placeholder="Enter event name" {...field} maxLength={100} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="description" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl><Textarea placeholder="Enter event description" className="min-h-[100px]" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-8"
+              >
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Event Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter event name"
+                          {...field}
+                          maxLength={100}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter event description"
+                          className="min-h-[100px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                <FormField control={form.control} name="location" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Location</FormLabel>
-                    <FormControl><Textarea placeholder="Enter event location" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter event location"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 {/* Required Skills */}
                 <FormField
@@ -266,11 +315,19 @@ export default function EventManagementPage() {
                               role="combobox"
                               className={cn(
                                 "w-full justify-between",
-                                field.value.length === 0 && "text-muted-foreground"
+                                field.value.length === 0 &&
+                                  "text-muted-foreground"
                               )}
                             >
                               {field.value.length > 0
-                                ? field.value.map((skill) => skillsList.find((s) => s.value === skill)?.label).join(", ")
+                                ? field.value
+                                    .map(
+                                      (skill) =>
+                                        skillsList.find(
+                                          (s) => s.value === skill
+                                        )?.label
+                                    )
+                                    .join(", ")
                                 : "Select skills"}
                             </Button>
                           </FormControl>
@@ -282,8 +339,12 @@ export default function EventManagementPage() {
                                 key={skill.value}
                                 className="flex items-center p-2 hover:bg-gray-100 cursor-pointer"
                                 onClick={() => {
-                                  const newValue = field.value.includes(skill.value)
-                                    ? field.value.filter((value) => value !== skill.value) // Remove skill if already selected
+                                  const newValue = field.value.includes(
+                                    skill.value
+                                  )
+                                    ? field.value.filter(
+                                        (value) => value !== skill.value
+                                      ) // Remove skill if already selected
                                     : [...field.value, skill.value]; // Add skill if not selected
                                   form.setValue("skills", newValue);
                                 }}
@@ -304,7 +365,6 @@ export default function EventManagementPage() {
                     </FormItem>
                   )}
                 />
-
 
                 {/* Urgency */}
                 <FormField
@@ -375,7 +435,9 @@ export default function EventManagementPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit">{editingEvent ? "Update Event" : "Create Event"}</Button>
+                <Button type="submit">
+                  {editingEvent ? "Update Event" : "Create Event"}
+                </Button>
               </form>
             </Form>
           </CardContent>
