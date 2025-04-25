@@ -28,38 +28,28 @@ interface Event {
   location: string;
 }
 
-const stats = [
-  {
-    title: "Total Events",
-    value: "45",
-    description: "Active events this month",
-    icon: Calendar,
-  },
-  {
-    title: "Active Volunteers",
-    value: "289",
-    description: "+20% from last month",
-    icon: Users,
-  },
-  {
-    title: "Hours Donated",
-    value: "1,420",
-    description: "Past 30 days",
-    icon: Clock,
-  },
-  {
-    title: "Engagement Rate",
-    value: "88%",
-    description: "Average participation",
-    icon: Activity,
-  },
-];
-
 export default function DashboardPage() {
   const [recentEvents, setRecentEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [metrics, setMetrics] = useState({
+    totalEvents: 0,
+    activeVolunteers: 0,
+    hoursDonated: 0,
+    engagementRate: 0,
+  });
+
   useEffect(() => {
+    async function fetchMetrics() {
+      try {
+        const res = await fetch("/api/metrics");
+        const data = await res.json();
+        setMetrics(data);
+      } catch (err) {
+        console.error("Failed to fetch metrics", err);
+      }
+    }
+
     async function fetchEvents() {
       try {
         const res = await fetch("/api/events");
@@ -72,6 +62,7 @@ export default function DashboardPage() {
       }
     }
 
+    fetchMetrics();
     fetchEvents();
   }, []);
 
@@ -81,25 +72,55 @@ export default function DashboardPage() {
 
       {/* Metrics Section */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={stat.title}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {stat.title}
-                </CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">
-                  {stat.description}
-                </p>
-              </CardContent>
-            </Card>
-          );
-        })}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Events</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.totalEvents}</div>
+            <p className="text-xs text-muted-foreground">
+              Active events this month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">
+              Active Volunteers
+            </CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.activeVolunteers}</div>
+            <p className="text-xs text-muted-foreground">
+              +20% from last month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Hours Donated</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.hoursDonated}</div>
+            <p className="text-xs text-muted-foreground">Past 30 days</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Engagement Rate</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.engagementRate}%</div>
+            <p className="text-xs text-muted-foreground">Average participation</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Recent Events Table */}
