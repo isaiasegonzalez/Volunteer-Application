@@ -84,11 +84,14 @@ const SignUpForm: React.FC = () => {
   
     const data = await response.json();
     if (response.ok) {
-      // ✅ Store user ID in localStorage
+      // Store user ID in localStorage
       localStorage.setItem("tempUserId", data.userId);
 
-      // ✅ Store session
-      
+      // Store session
+      if (data.session) {
+        await supabase.auth.setSession(data.session);
+      }
+
       setMessage("Account created! Redirecting...");
       setTimeout(() => router.push("/profile"), 1500);
     } else {

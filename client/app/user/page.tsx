@@ -144,67 +144,85 @@ const VolunteerDashboard = () => {
   const toggleHistory = () => {
     setIsHistoryExpanded((prev) => !prev);
   };
-
+  
+  
   const handleCompleteEvent = async (event: UpcomingEvent) => {
     try {
-      // Prepare new history entry
-      const newHistoryEntry: VolunteerHistory = {
-        id: event.id,
-        date: new Date().toLocaleDateString("en-US", {
-          month: "2-digit",
-          day: "2-digit",
-          year: "2-digit",
-        }),
-        facility: event.facility,
-        points: 10, // Default points, adjust as needed
-        user_id: event.user_id || '',
-      };
-
-      // Remove event from upcoming events
-      const updatedUpcomingEvents = upcomingEvents.filter(
-        (e) => e.id !== event.id
-      );
-      setUpcomingEvents(updatedUpcomingEvents);
-
-      // Update volunteer history locally
-      const updatedVolunteerHistory = [newHistoryEntry, ...volunteerHistory];
-      setVolunteerHistory(updatedVolunteerHistory);
-
-      // Delete the event from volunteer_events table
-      const { error: deleteError } = await supabase
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const userId = authData?.user?.id;
+      console.log("Event to delete:", event);
+      console.log("Current user id:", userId);
+  
+      // Try converting id to integer
+      const eventId = typeof event.id === "string" ? Number(event.id) : event.id;
+      console.log("Converted event id:", eventId);
+  
+      // See what exists before delete
+      let { data: rowsBefore } = await supabase
+        .from("volunteer_events")
+        .select("*")
+        .eq("id", eventId)
+        .eq("user_id", userId);
+      console.log("Rows before delete:", rowsBefore);
+  
+      // Delete
+      const { error: deleteError, data: deleteData } = await supabase
         .from("volunteer_events")
         .delete()
-        .eq("id", event.id);
-
-      // Add entry to volunteer_history table
-      const { error: insertError } = await supabase.from("volunteer_history").insert({
-        date: new Date().toISOString(),
-        facility: event.facility,
-        points: 10,
-        user_id: event.user_id,
-      });
-
+        .eq("id", eventId)
+        .eq("user_id", userId);
+  
       if (deleteError) {
         console.error("Error deleting event:", deleteError);
-        // Revert local state changes if database deletion fails
-        setUpcomingEvents([...upcomingEvents, event]);
-        setVolunteerHistory(volunteerHistory);
+        alert("Could not complete event. Please try again.");
+        return;
       }
-
+  
+      // See what exists after delete
+      let { data: rowsAfter } = await supabase
+        .from("volunteer_events")
+        .select("*")
+        .eq("id", eventId)
+        .eq("user_id", userId);
+      console.log("Rows after delete:", rowsAfter);
+  
+      // Insert to history as before
+      const { error: insertError } = await supabase.from("volunteer_history").insert({
+        date: new Date().toISOString(),
+        facility: capitalizeWords(event.facility),
+        points: 10,
+        user_id: userId,
+      });
+  
       if (insertError) {
         console.error("Error inserting history:", insertError);
-        // Revert local state changes if insertion fails
-        setUpcomingEvents([...upcomingEvents, event]);
-        setVolunteerHistory(volunteerHistory);
+        alert("Could not add to volunteer history. Please try again.");
+        return;
       }
+  
+      setUpcomingEvents((prev) => prev.filter((e) => e.id !== eventId));
+      setVolunteerHistory((prev) => [
+        {
+          id: eventId,
+          date: new Date().toLocaleDateString("en-US", {
+            month: "2-digit",
+            day: "2-digit",
+            year: "2-digit",
+          }),
+          facility: capitalizeWords(event.facility),
+          points: 10,
+          user_id: userId as string,
+        },
+        ...prev,
+      ]);
     } catch (error) {
       console.error("Error in handleCompleteEvent:", error);
-      // Revert local state changes in case of any unexpected error
-      setUpcomingEvents([...upcomingEvents, event]);
-      setVolunteerHistory(volunteerHistory);
+      alert("An error occurred. Please try again.");
     }
   };
-
+  
+  
+  
   return (
     <div className="w-full h-full flex flex-col">
       {/* Top Section */}
@@ -269,28 +287,32 @@ const VolunteerDashboard = () => {
               Loading events...
             </div>
           ) : upcomingEvents.length > 0 ? (
-            upcomingEvents.map((event, index) => (
-              <div
-                key={event.id}
-                className={`flex items-center justify-between py-4 ${
-                  index < upcomingEvents.length - 1
-                    ? "border-b border-gray-100"
-                    : ""
-                }`}
-              >
-                <div className="text-gray-600">{event.date}</div>
-                <div className="text-pink-400 font-medium">
-                  {capitalizeWords(event.facility)}
-                </div>
-                <div className="text-gray-600">{event.time}</div>
-                <button 
-                  onClick={() => handleCompleteEvent(event)}
-                  className="text-green-500 hover:text-green-600 transition-colors"
+            // ----------- SCROLLABLE CONTAINER -----------
+            <div className="max-h-96 overflow-y-auto">
+              {upcomingEvents.map((event, index) => (
+                <div
+                  key={event.id}
+                  className={`flex items-center justify-between py-4 ${
+                    index < upcomingEvents.length - 1
+                      ? "border-b border-gray-100"
+                      : ""
+                  }`}
                 >
-                  <Check className="w-5 h-5" />
-                </button>
-              </div>
-            ))
+                  <div className="text-gray-600">{event.date}</div>
+                  <div className="text-pink-400 font-medium">
+                    {capitalizeWords(event.facility)}
+                  </div>
+                  <div className="text-gray-600">{event.time}</div>
+                  <button 
+                    onClick={() => handleCompleteEvent(event)}
+                    className="text-green-500 hover:text-green-600 transition-colors"
+                  >
+                    <Check className="w-5 h-5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            // ----------- END SCROLLABLE CONTAINER -----------
           ) : (
             <div className="py-4 text-center text-gray-500">
               No upcoming events
@@ -298,6 +320,7 @@ const VolunteerDashboard = () => {
           )}
         </div>
       </div>
+
 
       {/* Volunteer History Section */}
       <div className="mb-4 flex items-center justify-between">
@@ -348,7 +371,7 @@ const VolunteerDashboard = () => {
                   >
                     <td className="py-4 px-4 text-gray-600">{history.date}</td>
                     <td className="py-4 px-4 text-pink-400 font-medium">
-                      {history.facility}
+                    {capitalizeWords(history.facility)}
                     </td>
                     <td className="py-4 px-4 text-right font-medium">
                       {history.points}
