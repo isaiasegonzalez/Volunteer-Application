@@ -45,6 +45,11 @@ const data = {
       url: "/admin/notifications",
       icon: Bell,
     },
+    {
+      title: "Reports",
+      url: "/admin/reports",
+      icon: LayoutDashboard, 
+    },
   ],
 };
 
