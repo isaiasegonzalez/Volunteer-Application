@@ -157,7 +157,7 @@ export default function ReportsPage() {
     downloadFile(csv, "event_assignments.csv", "text/csv");
   };
 
-  // --- PDF for Grouped Events ---
+  // PDF for Grouped Events
   const exportEventsPDF = () => {
     const doc = new jsPDF();
     doc.text("Event Details and Volunteer Assignments", 14, 10);
@@ -197,7 +197,7 @@ export default function ReportsPage() {
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle>Recent Volunteer Reports</CardTitle>
+                <CardTitle>Volunteer Reports</CardTitle>
                 <span className="text-sm text-muted-foreground">
                   Overview of volunteer participation and points.
                 </span>
